@@ -1,6 +1,6 @@
 import typer
 
-from forge.doctor import check
+from forge.services.doctor import check
 
 app = typer.Typer(help="Forge AI Software Engineer")
 
