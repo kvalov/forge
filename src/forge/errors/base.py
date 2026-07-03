@@ -1,17 +1,17 @@
 from dataclasses import dataclass
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class ErrorInfo:
+    """Structured information describing an error."""
+
     code: str
     message: str
     hint: str = ""
 
 
 class ForgeError(Exception):
-    """Base class for all Forge exceptions."""
-
-    error: ErrorInfo
+    """Base exception for all Forge errors."""
 
     def __init__(self, error: ErrorInfo):
         self.error = error
