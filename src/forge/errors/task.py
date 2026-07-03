@@ -2,14 +2,18 @@ from forge.errors.base import ErrorInfo, ForgeError
 
 
 class TaskError(ForgeError):
+    """Task exception."""
+
     def __init__(
         self,
         message: str,
-        hint: str = "Verify the requested task.",
-    ):
+        *,
+        code: str = "TASK001",
+        hint: str = "Verify task execution.",
+    ) -> None:
         super().__init__(
             ErrorInfo(
-                code="TASK001",
+                code=code,
                 message=message,
                 hint=hint,
             )

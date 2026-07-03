@@ -2,14 +2,18 @@ from forge.errors.base import ErrorInfo, ForgeError
 
 
 class FilesystemError(ForgeError):
+    """Filesystem exception."""
+
     def __init__(
         self,
         message: str,
-        hint: str = "Verify the filesystem path.",
-    ):
+        *,
+        code: str = "FS001",
+        hint: str = "Verify filesystem path.",
+    ) -> None:
         super().__init__(
             ErrorInfo(
-                code="FS001",
+                code=code,
                 message=message,
                 hint=hint,
             )
