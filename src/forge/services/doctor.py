@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from forge.logging.logger import configure_logging, get_logger
+from forge.logging.logger import get_logger
 
 logger = get_logger(__name__)
 
