@@ -12,13 +12,22 @@ class WorkspacePort(Protocol):
     def state(self) -> WorkspaceState:
         ...
 
+    def exists(self, path: Path) -> bool:
+        ...
+
     def read_text(self, path: Path) -> str:
         ...
 
     def write_text(self, path: Path, text: str) -> None:
         ...
 
-    def exists(self, path: Path) -> bool:
+    def mkdir(self, path: Path) -> None:
+        ...
+
+    def delete(self, path: Path) -> None:
+        ...
+
+    def move(self, source: Path, destination: Path) -> None:
         ...
 
     def list_files(self) -> tuple[WorkspaceFile, ...]:

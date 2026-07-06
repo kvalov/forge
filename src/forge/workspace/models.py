@@ -18,8 +18,20 @@ class WorkspaceState:
 
     root: Path
 
+    project_name: str
+
+    exists: bool
+
     file_count: int
+
+    directory_count: int
 
     python_files: int
 
-    exists: bool
+    has_git: bool
+
+    has_pyproject: bool
+
+    has_readme: bool
+
+    has_tests: bool

@@ -4,7 +4,7 @@ import typer
 
 from forge.cli.repository import app as repository_app
 from forge.services.doctor import DoctorService
-
+from forge.cli.workspace import app as workspace_app
 app = typer.Typer(
     help="Forge AI Software Engineer",
 )
@@ -14,6 +14,10 @@ app.add_typer(
     name="repository",
 )
 
+app.add_typer(
+    workspace_app,
+    name="workspace",
+)
 
 @app.command()
 def doctor() -> None:
