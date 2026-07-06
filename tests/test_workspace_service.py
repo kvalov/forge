@@ -62,3 +62,19 @@ def test_workspace_exists():
     service = WorkspaceService(FakeWorkspacePort())
 
     assert service.exists(Path("anything")) is True
+
+    
+def test_python_files():
+    service = WorkspaceService(FakeWorkspacePort())
+
+    files = service.python_files()
+
+    assert isinstance(files, tuple)
+
+
+def test_test_files():
+    service = WorkspaceService(FakeWorkspacePort())
+
+    files = service.test_files()
+
+    assert isinstance(files, tuple)
