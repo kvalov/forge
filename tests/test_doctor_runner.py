@@ -1,3 +1,4 @@
+from forge.doctor.models import CheckResult
 from forge.doctor.runner import DoctorRunner
 
 
@@ -5,15 +6,19 @@ def test_runner_collects_checks() -> None:
     runner = DoctorRunner()
 
     runner.add(
-        "Python",
-        True,
-        "Python found",
+        CheckResult(
+            name="Python",
+            ok=True,
+            message="Python found",
+        )
     )
 
     runner.add(
-        "Git",
-        True,
-        "Git found",
+        CheckResult(
+            name="Git",
+            ok=True,
+            message="Git found",
+        )
     )
 
     report = runner.report()
@@ -26,9 +31,11 @@ def test_runner_clear() -> None:
     runner = DoctorRunner()
 
     runner.add(
-        "Python",
-        True,
-        "Python found",
+        CheckResult(
+            name="Python",
+            ok=True,
+            message="Python found",
+        )
     )
 
     runner.clear()

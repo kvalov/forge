@@ -1,265 +1,419 @@
 # Forge Architecture
 
-> Architecture is a set of rules that allow Forge to evolve without becoming difficult to maintain.
+> "Software engineering for AI begins with understanding the code."
 
 ---
 
-# Vision
+# Overview
 
-Forge is **not** a Git client.
+Forge is built around a simple idea:
 
-Forge is **not** an AI wrapper.
+**AI cannot safely modify software it does not understand.**
 
-Forge is an **AI Software Engineer**.
+Before planning, reviewing or generating code, Forge must build an internal semantic model of the project.
 
-The purpose of Forge is to understand software projects, plan work, implement changes, review code and execute software engineering tasks autonomously.
-
-External technologies (Git, filesystem, terminal, AI models) are implementation details.
+Everything inside Forge exists to support that objective.
 
 ---
 
 # Core Principles
 
-## 1. Domain First
+Forge follows several architectural principles.
 
-Forge is organized around engineering domains, not technologies.
+- Clean Architecture
+- Domain-Driven Design
+- SOLID
+- Ports & Adapters
+- Composition over Inheritance
+- Explicit Dependencies
+- Testability First
+- Static Analysis
 
-Good:
+---
 
-- Repository
-- Workspace
-- Analysis
-- Planning
-- Tasks
-- AI
+# High-Level Architecture
 
-Avoid:
+```
+                CLI
+                 │
+                 ▼
+         Application Services
+                 │
+                 ▼
+        Domain / Business Logic
+                 │
+                 ▼
+         Ports (Interfaces)
+                 │
+                 ▼
+      Infrastructure Adapters
+```
 
+The domain never depends on infrastructure.
+
+Infrastructure depends on the domain.
+
+The CLI depends only on services.
+
+---
+
+# Current Domains
+
+```
+analysis/
+doctor/
+project/
+python/
+repository/
+workspace/
+```
+
+Each domain has a single responsibility.
+
+---
+
+# Repository Domain
+
+Responsible for understanding Git repositories.
+
+```
+RepositoryService
+        │
+        ▼
+RepositoryPort
+        │
+        ▼
+GitPythonAdapter
+```
+
+Responsibilities
+
+- Repository status
+- Branch information
+- Working tree
+- Remote detection
+
+Future
+
+- Commit history
+- Branch comparison
+- Diff analysis
+
+---
+
+# Workspace Domain
+
+Responsible for understanding the filesystem.
+
+```
+WorkspaceService
+        │
+        ▼
+WorkspacePort
+        │
+        ▼
+LocalFilesystemAdapter
+```
+
+Responsibilities
+
+- Project root
+- Python files
+- Ignore rules
+- File discovery
+
+Future
+
+- File watching
+- Cache
+- Workspace snapshots
+
+---
+
+# Project Domain
+
+Responsible for project-level information.
+
+```
+ProjectService
+        │
+        ▼
+ProjectScanner
+        │
+        ▼
+WorkspaceService
+```
+
+Responsibilities
+
+- Project metadata
+- Statistics
+- Project analysis
+
+Future
+
+- Complexity
+- Metrics
+- Project health
+
+---
+
+# Python Domain
+
+Responsible for understanding Python source code.
+
+```
+Python Source
+
+        │
+
+        ▼
+
+Parser
+
+        │
+
+        ▼
+
+AST
+
+        │
+
+ ┌──────┴─────────┐
+
+ ▼                ▼
+
+ModuleVisitor   SymbolVisitor
+
+ │                │
+
+ ▼                ▼
+
+ModuleInfo    SymbolIndex
+```
+
+Responsibilities
+
+- Parsing
+- Symbol indexing
+- AST analysis
+
+Future
+
+- Import graph
+- Reference graph
+- Call graph
+
+---
+
+# Doctor Domain
+
+Responsible for validating the environment.
+
+```
+DoctorService
+
+        │
+
+        ▼
+
+DoctorRunner
+
+        │
+
+ ┌──────┴────────────┐
+
+ ▼                   ▼
+
+DoctorCheck      DoctorReport
+```
+
+Checks
+
+- Python
 - Git
-- OS
-- subprocess
-- OpenAI
-
-Technologies belong to Infrastructure.
-
----
-
-## 2. Services contain business logic
-
-Business rules belong only to Services.
-
-Services answer questions like:
-
-- Can this repository be published?
-- Is the workspace ready?
-- Can a task start?
-
-Services never contain CLI code.
-
-Services never print to the console.
-
-Services never know about Typer.
-
----
-
-## 3. Providers communicate with external systems
-
-Providers expose abstract capabilities.
-
-Examples:
-
-- RepositoryProvider
-- WorkspaceProvider
-- TerminalProvider
-- AIProvider
-
-Providers never contain business rules.
-
----
-
-## 4. Infrastructure contains implementations
-
-Infrastructure implements Providers.
-
-Examples:
-
-- GitPythonProvider
-- LocalFilesystemProvider
-- LocalTerminalProvider
-- OpenAIProvider
-
-Infrastructure may depend on third-party libraries.
-
-Business logic must never depend directly on those libraries.
-
----
-
-## 5. Models describe the domain
-
-Models contain data.
-
-Models do not perform work.
-
-Models should be immutable whenever possible.
-
-Preferred:
-
-- dataclass(frozen=True)
-- Pydantic models when validation is required
-
----
-
-## 6. CLI is only an interface
-
-CLI responsibilities:
-
-- Parse commands
-- Call services
-- Display results
-
-CLI never contains business logic.
-
----
-
-## 7. Error handling is centralized
-
-Every expected error derives from ForgeError.
-
-Unexpected exceptions should be logged.
-
-Expected errors should display:
-
-- error code
-- message
-- hint
-
-without a Python traceback.
-
----
-
-## 8. Logging is centralized
-
-Every module uses:
-
-```python
-logger = get_logger(__name__)
-```
-
-No module configures logging itself.
-
----
-
-## 9. Testing
-
-Every new feature must include tests.
-
-Quality gate:
-
-- pytest
-- ruff
-- mypy
-- forge doctor
-
-must pass before merging.
-
----
-
-# Layered Architecture
-
-```
-            CLI
-             │
-             ▼
-         Services
-             │
-             ▼
-         Providers
-             │
-             ▼
-      Infrastructure
-             │
-             ▼
-     External Systems
-```
-
-Dependencies always point downward.
-
-Reverse dependencies are forbidden.
-
----
-
-# Domain Model
-
-Forge should think in engineering concepts.
-
-Preferred:
-
-- Repository
+- uv
 - Workspace
-- Task
-- Analysis
-- Plan
-- Review
 
-Avoid exposing implementation details such as Git commands to higher layers.
+Future
+
+- Cache
+- Plugins
+- Configuration
+- AI providers
 
 ---
 
-# Future Domains
+# Analysis Domain
 
-Repository
+Current purpose
 
-- RepositoryService
-- RepositoryProvider
-- RepositoryState
+Aggregate project information.
 
+Future purpose
+
+Become the language-independent analysis engine.
+
+```
+analysis/
+
+    python/
+
+    imports/
+
+    references/
+
+    callgraph/
+```
+
+---
+
+# Infrastructure
+
+Infrastructure contains implementations.
+
+```
+GitPythonAdapter
+
+LocalFilesystemAdapter
+```
+
+Infrastructure never contains business logic.
+
+---
+
+# Dependency Rule
+
+Allowed
+
+```
+CLI
+
+↓
+
+Services
+
+↓
+
+Domain
+
+↓
+
+Ports
+
+↓
+
+Infrastructure
+```
+
+Forbidden
+
+```
+Infrastructure
+
+↓
+
+CLI
+```
+
+---
+
+# Python Analysis Pipeline
+
+Current
+
+```
 Workspace
 
-- WorkspaceService
-- WorkspaceProvider
-- WorkspaceState
+↓
 
-Analysis
+PythonIndexer
 
-- Analyzer
-- SymbolIndex
-- AST
+↓
 
-Planning
+IndexBuilder
 
-- Planner
-- TaskEngine
+↓
 
-AI
+SymbolVisitor
 
-- AIProvider
-- PromptEngine
-- Memory
+↓
+
+SymbolIndex
+```
+
+Future
+
+```
+Workspace
+
+↓
+
+Python Parser
+
+↓
+
+AST
+
+↓
+
+ImportVisitor
+
+↓
+
+ReferenceVisitor
+
+↓
+
+CallVisitor
+
+↓
+
+ArchitectureBuilder
+
+↓
+
+Knowledge Graph
+```
 
 ---
 
-# Architectural Rules
+# Future AI Pipeline
 
-Never:
+```
+Knowledge Graph
 
-- print() from Services
-- call GitPython directly from CLI
-- call subprocess from Services
-- return dictionaries from Services
-- duplicate business rules
+↓
 
-Always:
+Planner
 
-- use Models
-- use Providers
-- use Services
-- raise ForgeError
-- keep modules focused on one responsibility
+↓
+
+Reviewer
+
+↓
+
+AI Coder
+
+↓
+
+Task Engine
+```
+
+Every AI capability will rely on the semantic model produced by the analysis pipeline.
 
 ---
 
-# Long-Term Goal
+# Long-Term Vision
 
-Forge should evolve from a command-line tool into an autonomous software engineering platform.
+Forge is not a code generator.
 
-Every architectural decision should support that goal.
+Forge is a software engineering platform.
+
+The objective is to understand a software system before proposing or applying changes.
+
+Understanding precedes generation.
+
+Analysis precedes automation.
+
+This principle guides every architectural decision inside Forge.

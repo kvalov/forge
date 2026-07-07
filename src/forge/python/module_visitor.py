@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 
+
 from forge.python.models import (
     ClassInfo,
     FunctionInfo,

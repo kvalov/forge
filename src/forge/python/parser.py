@@ -4,7 +4,7 @@ import ast
 from pathlib import Path
 
 from forge.python.models import ModuleInfo
-from forge.python.visitor import ModuleVisitor
+from forge.python.module_visitor import ModuleVisitor
 
 
 class PythonParser:

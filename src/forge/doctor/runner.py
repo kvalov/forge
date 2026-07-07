@@ -9,20 +9,9 @@ class DoctorRunner:
     def __init__(self) -> None:
         self._checks: list[CheckResult] = []
 
-    def add(
-        self,
-        name: str,
-        ok: bool,
-        message: str,
-    ) -> None:
+    def add(self, result: CheckResult) -> None:
         """Add a completed check."""
-        self._checks.append(
-            CheckResult(
-                name=name,
-                ok=ok,
-                message=message,
-            )
-        )
+        self._checks.append(result)
 
     def report(self) -> DoctorReport:
         """Build the final report."""
@@ -31,5 +20,5 @@ class DoctorRunner:
         )
 
     def clear(self) -> None:
-        """Reset all collected checks."""
+        """Reset collected checks."""
         self._checks.clear()

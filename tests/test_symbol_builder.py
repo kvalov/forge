@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from forge.python.builder import SymbolBuilder
+from forge.python.symbol_builder import SymbolBuilder
 from forge.python.models import (
     ClassInfo,
     FunctionInfo,
