@@ -1,419 +1,298 @@
 # Forge Architecture
 
-> "Software engineering for AI begins with understanding the code."
+> Version: v0.3 Alpha
+
+This document defines the architectural principles of Forge.
 
 ---
 
-# Overview
+# Vision
 
-Forge is built around a simple idea:
+Forge is a **Software Knowledge Engine**.
 
-**AI cannot safely modify software it does not understand.**
+Its goal is to understand software projects through static analysis and expose that knowledge to different clients:
 
-Before planning, reviewing or generating code, Forge must build an internal semantic model of the project.
+- CLI
+- AI agents
+- IDE extensions
+- APIs
+- CI/CD integrations
 
-Everything inside Forge exists to support that objective.
-
----
-
-# Core Principles
-
-Forge follows several architectural principles.
-
-- Clean Architecture
-- Domain-Driven Design
-- SOLID
-- Ports & Adapters
-- Composition over Inheritance
-- Explicit Dependencies
-- Testability First
-- Static Analysis
+The AI layer consumes knowledge. It does not create it.
 
 ---
 
-# High-Level Architecture
+# Architecture
+
+Forge follows a layered architecture.
 
 ```
-                CLI
-                 │
-                 ▼
-         Application Services
-                 │
-                 ▼
-        Domain / Business Logic
-                 │
-                 ▼
-         Ports (Interfaces)
-                 │
-                 ▼
-      Infrastructure Adapters
-```
-
-The domain never depends on infrastructure.
-
-Infrastructure depends on the domain.
-
-The CLI depends only on services.
-
----
-
-# Current Domains
-
-```
-analysis/
-doctor/
-project/
-python/
-repository/
-workspace/
-```
-
-Each domain has a single responsibility.
-
----
-
-# Repository Domain
-
-Responsible for understanding Git repositories.
-
-```
-RepositoryService
+CLI
         │
         ▼
-RepositoryPort
+Application Services
         │
         ▼
-GitPythonAdapter
+Domain
+        │
+        ▼
+Infrastructure
 ```
 
-Responsibilities
-
-- Repository status
-- Branch information
-- Working tree
-- Remote detection
-
-Future
-
-- Commit history
-- Branch comparison
-- Diff analysis
+Dependencies always point downward.
 
 ---
 
-# Workspace Domain
-
-Responsible for understanding the filesystem.
+# Project Structure
 
 ```
-WorkspaceService
-        │
-        ▼
-WorkspacePort
-        │
-        ▼
-LocalFilesystemAdapter
-```
+forge/
 
-Responsibilities
+    cli/
 
-- Project root
-- Python files
-- Ignore rules
-- File discovery
+    project/
 
-Future
+    workspace/
 
-- File watching
-- Cache
-- Workspace snapshots
-
----
-
-# Project Domain
-
-Responsible for project-level information.
-
-```
-ProjectService
-        │
-        ▼
-ProjectScanner
-        │
-        ▼
-WorkspaceService
-```
-
-Responsibilities
-
-- Project metadata
-- Statistics
-- Project analysis
-
-Future
-
-- Complexity
-- Metrics
-- Project health
-
----
-
-# Python Domain
-
-Responsible for understanding Python source code.
-
-```
-Python Source
-
-        │
-
-        ▼
-
-Parser
-
-        │
-
-        ▼
-
-AST
-
-        │
-
- ┌──────┴─────────┐
-
- ▼                ▼
-
-ModuleVisitor   SymbolVisitor
-
- │                │
-
- ▼                ▼
-
-ModuleInfo    SymbolIndex
-```
-
-Responsibilities
-
-- Parsing
-- Symbol indexing
-- AST analysis
-
-Future
-
-- Import graph
-- Reference graph
-- Call graph
-
----
-
-# Doctor Domain
-
-Responsible for validating the environment.
-
-```
-DoctorService
-
-        │
-
-        ▼
-
-DoctorRunner
-
-        │
-
- ┌──────┴────────────┐
-
- ▼                   ▼
-
-DoctorCheck      DoctorReport
-```
-
-Checks
-
-- Python
-- Git
-- uv
-- Workspace
-
-Future
-
-- Cache
-- Plugins
-- Configuration
-- AI providers
-
----
-
-# Analysis Domain
-
-Current purpose
-
-Aggregate project information.
-
-Future purpose
-
-Become the language-independent analysis engine.
-
-```
-analysis/
+    repository/
 
     python/
 
-    imports/
+    infrastructure/
 
-    references/
+    logging/
 
-    callgraph/
+    errors/
 ```
+
+Each package owns its own domain.
 
 ---
 
-# Infrastructure
+# Package Responsibilities
 
-Infrastructure contains implementations.
+## cli
 
-```
-GitPythonAdapter
+Responsible for:
 
-LocalFilesystemAdapter
-```
+- parsing CLI arguments
+- formatting output
+- calling application services
 
-Infrastructure never contains business logic.
+No business logic.
 
 ---
 
-# Dependency Rule
+## project
+
+Responsible for project-wide analysis.
+
+Owns:
+
+- ProjectScanner
+- ProjectAnalyzer
+- ProjectService
+
+---
+
+## workspace
+
+Responsible for:
+
+- workspace discovery
+- ignore rules
+- filesystem traversal
+
+---
+
+## repository
+
+Responsible for:
+
+- Git metadata
+- repository information
+
+---
+
+## python
+
+Responsible for:
+
+- parsing
+- AST analysis
+- symbol indexing
+- import graph
+- reference graph
+
+No dependency on CLI.
+
+No dependency on Git.
+
+---
+
+## infrastructure
+
+Contains adapters for external systems.
+
+Examples:
+
+- GitPython
+- Local filesystem
+
+No domain logic.
+
+---
+
+# Dependency Rules
 
 Allowed
 
-```
 CLI
+→ Project
 
-↓
+Project
+→ Workspace
 
-Services
+Project
+→ Python
 
-↓
-
-Domain
-
-↓
-
-Ports
-
-↓
+Project
+→ Repository
 
 Infrastructure
-```
+→ External libraries
 
 Forbidden
 
-```
+Python
+→ CLI
+
+Python
+→ Repository
+
+Workspace
+→ CLI
+
+Repository
+→ Python
+
 Infrastructure
-
-↓
-
-CLI
-```
+→ Project
 
 ---
 
-# Python Analysis Pipeline
+# Models
 
-Current
+Models represent domain concepts.
 
-```
-Workspace
+Examples
 
-↓
+- ModuleInfo
+- ProjectInfo
+- ProjectAnalysis
+- SymbolIndex
+- Reference
+- Import
 
-PythonIndexer
-
-↓
-
-IndexBuilder
-
-↓
-
-SymbolVisitor
-
-↓
-
-SymbolIndex
-```
-
-Future
-
-```
-Workspace
-
-↓
-
-Python Parser
-
-↓
-
-AST
-
-↓
-
-ImportVisitor
-
-↓
-
-ReferenceVisitor
-
-↓
-
-CallVisitor
-
-↓
-
-ArchitectureBuilder
-
-↓
-
-Knowledge Graph
-```
+Avoid wrapper models unless they introduce new behaviour.
 
 ---
 
-# Future AI Pipeline
+# Visitors
 
-```
-Knowledge Graph
+Visitors inspect AST nodes.
 
-↓
+Visitors must not:
 
-Planner
+- access Git
+- print output
+- read arbitrary files
+- write files
 
-↓
-
-Reviewer
-
-↓
-
-AI Coder
-
-↓
-
-Task Engine
-```
-
-Every AI capability will rely on the semantic model produced by the analysis pipeline.
+Visitors analyze syntax only.
 
 ---
 
-# Long-Term Vision
+# Indexers
 
-Forge is not a code generator.
+Indexers transform many modules into searchable structures.
 
-Forge is a software engineering platform.
+Examples:
 
-The objective is to understand a software system before proposing or applying changes.
+- SymbolIndex
+- ImportGraph
+- ReferenceGraph
 
-Understanding precedes generation.
+Indexers are pure.
 
-Analysis precedes automation.
+---
 
-This principle guides every architectural decision inside Forge.
+# Analyzer
+
+Analyzers aggregate information.
+
+They orchestrate:
+
+- parser
+- visitors
+- indexers
+
+---
+
+# Services
+
+Services orchestrate domains.
+
+Services should not duplicate domain logic.
+
+---
+
+# Testing
+
+Every feature must include:
+
+- Ruff clean
+- MyPy clean
+- Pytest clean
+
+Green build is mandatory.
+
+---
+
+# Pull Requests
+
+One PR = one feature.
+
+Every PR must:
+
+- compile
+- pass Ruff
+- pass MyPy
+- pass Pytest
+
+Avoid unrelated refactoring.
+
+---
+
+# Design Principles
+
+- Keep components small.
+- Prefer composition over inheritance.
+- Avoid duplicate parsing.
+- Keep domain models immutable.
+- Keep infrastructure replaceable.
+
+---
+
+# Long-term Vision
+
+Forge evolves in four stages:
+
+1. Static Analysis
+2. Project Intelligence
+3. Knowledge Graph
+4. AI Engineering Platform
+
+Knowledge first.
+
+AI second.
